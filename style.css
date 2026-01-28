@@ -1,0 +1,30 @@
+.task-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    background: white;
+}
+
+/* Feature 3: Visual distinction for completed tasks  */
+.task-item.completed .task-title {
+    text-decoration: line-through;
+    color: #888;
+}
+
+.task-date {
+    margin-left: auto;
+    color: #aaa;
+    font-size: 0.8em;
+}
+
+.filters {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+}
+
+.filter-btn.active {
+    background-color: #007bff;
+    color: white;
+}
