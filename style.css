@@ -230,3 +230,19 @@ button:hover { background-color: #0056b3; }
     width: 20px;
     height: 20px;
 }
+
+/* Feature 5: Visual indication for active task filters  */
+.status-filters .filter-btn {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.status-filters .filter-btn.active {
+    background-color: #007bff; /* Primary blue */
+    color: white;
+    border-color: #0056b3;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+    font-weight: bold;
+}
