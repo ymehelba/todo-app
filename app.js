@@ -53,9 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         li.innerHTML = `
             <div class="task-card-content">
+                <input type="checkbox" class="card-toggle" ${task.completed ? 'checked' : ''} 
+                    onclick="event.stopPropagation(); window.toggleTaskInline('${task.id}')">
                 <h3>${task.title}</h3>
                 <p class="status-badge">${task.completed ? 'Completed' : 'Pending'}</p>
-                <small>Added: ${new Date(task.createdAt).toLocaleDateString()}</small>
+                <small>Created: ${new Date(task.createdAt).toLocaleString()}</small>
                 <button class="delete-btn-inline" onclick="event.stopPropagation(); window.confirmDelete('${task.id}')">Delete</button>
             </div>
         `;
@@ -124,10 +126,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- FIXED DELETE LOGIC ---
     window.confirmDelete = function(id) {
         taskIdToDelete = id;
         deleteModal.style.display = 'block'; // Use block, not classList.remove
+    };
+
+    window.toggleTaskInline = function(taskId) {
+        toggleTaskStatus(taskId);
     };
 
     document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
@@ -160,7 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
             description: document.getElementById('description').value,
             assigned_to_user_id: parseInt(document.getElementById('assign-to').value),
             creator_name: creatorNameInput.value,
-            requester_date: document.getElementById('requester-date').value
         };
 
         try {

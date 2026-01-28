@@ -202,3 +202,31 @@ button:hover { background-color: #0056b3; }
 .toast.error {
     background-color: #dc3545;
 }
+
+
+/* Visual distinction for completed tasks */
+.task-item.completed h3 {
+    text-decoration: line-through;
+    color: #888;
+}
+
+.task-item.completed {
+    background-color: #e9f7ef; /* Light green tint for completed */
+    border-color: #c3e6cb;
+}
+
+.task-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: relative;
+}
+
+.card-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+}

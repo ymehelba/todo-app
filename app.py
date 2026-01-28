@@ -72,7 +72,7 @@ def get_all_tasks():
 def create_task():
     data = request.get_json()
     # Feature 1: Validation
-    required = ['title', 'assigned_to_user_id', 'creator_name', 'requester_date']
+    required = ['title', 'assigned_to_user_id', 'creator_name']
     if not data or not all(k in data for k in required) or not data['title'].strip():
         return jsonify({"error": "Missing required fields or empty title"}), 400
 
