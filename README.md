@@ -26,7 +26,7 @@ To enhance the user experience beyond the core requirements, I implemented the f
 
 ## Installation & Setup
 
-1. **Clone the repository**:
+Clone the repository:
    git clone [https://github.com/ymehelba/todo-app.git](https://github.com/ymehelba/todo-app.git)
    cd todo-task-tracker
    
@@ -39,8 +39,13 @@ python app.py
 Access:
 Open http://localhost:5000 in your browser.
 
+
 Project Structure
+
 app.py - Flask server and REST API endpoints.
+
 index.html - Main application structure and dashboard views.
+
 app.js - Frontend state management and DOM manipulation.
+
 style.css - Custom UI styling and visual indicators.
