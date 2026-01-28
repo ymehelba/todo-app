@@ -180,7 +180,5 @@ def delete_task(task_id):
     TASKS = [t for t in TASKS if t["id"] != task_id]
     return jsonify({"message": "Task deleted successfully"}), 200
 
-# (Other PUT/POST routes for assignment and comments can follow here)
-
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

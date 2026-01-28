@@ -5,10 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
         currentUserId: null,
         currentUserName: null,
         currentView: 'team-member',
-        currentFilter: 'All', // Feature 5: Added filter state [cite: 26-27]
+        currentFilter: 'All', 
         tasks: [] 
     };
     let taskIdToDelete = null;
+    let currentAction = null; 
 
     // DOM Elements
     const currentUserSelect = document.getElementById('current-user-select');
@@ -45,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    // Features 2 & 3: View all tasks with visual distinction
     function createTaskListItem(task) {
         const li = document.createElement('li');
         li.className = `task-item ${task.completed ? 'completed' : ''}`;
@@ -74,14 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Helper to filter tasks based on the active status filter
     function applyStatusFilter(tasks) {
         if (state.currentFilter === 'Completed') return tasks.filter(t => t.completed === true);
         if (state.currentFilter === 'Pending') return tasks.filter(t => t.completed === false);
-        return tasks; // 'All'
+        return tasks;
     }
 
-function updateUI() {
+    function updateUI() {
         if (state.currentView === 'team-member') {
             teamMemberDashboard.classList.remove('hidden');
             requesterDashboard.classList.add('hidden');
@@ -90,7 +89,6 @@ function updateUI() {
             teamMemberTitle.textContent = `${state.currentUserName}'s Assigned Tasks`;
             
             myTasksList.innerHTML = '';
-            // Apply both User and Status filters
             let myTasks = state.tasks.filter(t => t.assigned_to_user_id === state.currentUserId);
             myTasks = applyStatusFilter(myTasks);
 
@@ -106,7 +104,6 @@ function updateUI() {
             requesterViewBtn.classList.add('active');
             
             allTasksList.innerHTML = '';
-            // Apply Status filter to all system tasks [cite: 26-27]
             let allTasks = applyStatusFilter(state.tasks);
             if (allTasks.length === 0) {
                 allTasksList.innerHTML = '<li>No tasks found.</li>';
@@ -116,39 +113,32 @@ function updateUI() {
         }
     }
 
-    // Feature 5: Event Listeners for Filter Buttons [cite: 28]
+    // Filters
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            // Remove active class from all buttons and add to the clicked one
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             const filterType = e.target.getAttribute('data-filter');
-            
-            // Sync active state for buttons in both dashboards
             document.querySelectorAll(`.filter-btn[data-filter="${filterType}"]`).forEach(b => b.classList.add('active'));
-            
             state.currentFilter = filterType;
             updateUI();
         });
     });
 
-    // Feature 4: Persistent Delete Logic [cite: 23-25]
+    // --- FIXED DELETE LOGIC ---
     window.confirmDelete = function(id) {
         taskIdToDelete = id;
-        deleteModal.classList.remove('hidden');
+        deleteModal.style.display = 'block'; // Use block, not classList.remove
     };
 
     document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
         if (!taskIdToDelete) return;
-        
         try {
-            const response = await fetch(`${API_BASE_URL}/${taskIdToDelete}`, {
-                method: 'DELETE'
-            });
-            
+            const response = await fetch(`${API_BASE_URL}/${taskIdToDelete}`, { method: 'DELETE' });
             if (response.ok) {
-                showToast('Task deleted permanently.', 'error');
-                deleteModal.classList.add('hidden');
-                refreshData(); // Reload tasks from server [cite: 19]
+                showToast('Task deleted permanently.', 'success');
+                deleteModal.style.display = 'none'; // Use none
+                taskIdToDelete = null;
+                refreshData(); 
             } else {
                 throw new Error('Delete failed');
             }
@@ -158,11 +148,11 @@ function updateUI() {
     });
 
     document.getElementById('cancel-delete-btn').addEventListener('click', () => {
-        deleteModal.classList.add('hidden');
+        deleteModal.style.display = 'none'; // Use none
         taskIdToDelete = null;
     });
 
-    // Feature 1: Add New Task
+    // --- TASK CREATION ---
     async function handleCreateTask(event) {
         event.preventDefault();
         const taskData = {
@@ -188,11 +178,11 @@ function updateUI() {
         }
     }
     
+    // --- MODALS & STATUS ---
     async function openTaskDetailsModal(taskId) {
         try {
             const response = await fetch(`${API_BASE_URL}/${taskId}`);
             const task = await response.json();
-
             modalTitle.textContent = `Details: ${task.title}`;
             
             let historyHtml = '<h4>History:</h4>';
@@ -200,7 +190,6 @@ function updateUI() {
                 historyHtml += `<div class="history-item"><p>${h.change_description}</p><small>${h.changed_by_user_name} - ${new Date(h.change_date).toLocaleString()}</small></div>`;
             });
 
-            // Feature 3: Toggle completion status
             let actionsHtml = `<div class="task-actions" data-task-id="${task.id}">
                 <button class="reassign-btn">Reassign</button>
                 <button class="resolve-btn">${task.completed ? 'Re-open' : 'Mark as Complete'}</button>
@@ -224,15 +213,11 @@ function updateUI() {
     async function toggleTaskStatus(taskId) {
         const task = state.tasks.find(t => t.id === taskId);
         const nextStatus = task.completed ? "Open" : "Closed";
-        
         try {
             const response = await fetch(`${API_BASE_URL}/${taskId}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    new_status: nextStatus,
-                    changed_by_user_id: state.currentUserId 
-                })
+                body: JSON.stringify({ new_status: nextStatus, changed_by_user_id: state.currentUserId })
             });
             if (response.ok) {
                 showToast(`Task ${task.completed ? 're-opened' : 'completed'}!`);
@@ -244,29 +229,10 @@ function updateUI() {
         }
     }
 
-    // Feature 4: In-page delete logic
-    window.confirmDelete = function(id) {
-        taskIdToDelete = id;
-        deleteModal.classList.remove('hidden');
-    };
-
-    document.getElementById('confirm-delete-btn').addEventListener('click', () => {
-        state.tasks = state.tasks.filter(t => t.id !== taskIdToDelete);
-        deleteModal.classList.add('hidden');
-        showToast('Task removed from list.', 'error');
-        updateUI();
-    });
-
-    document.getElementById('cancel-delete-btn').addEventListener('click', () => {
-        deleteModal.classList.add('hidden');
-        taskIdToDelete = null;
-    });
-
     function openActionModal(taskId, action) {
         currentAction = action;
         modalTaskIdInput.value = taskId;
         modalSubmitBtn.style.display = 'block';
-
         if (action === 'reassign') {
             modalTitle.textContent = 'Reassign Task';
             modalBody.innerHTML = `<select id="modal-select" required><option value="1">Team Member 1</option><option value="2">Team Member 2</option><option value="3">Team Member 3</option></select>`;
@@ -308,7 +274,7 @@ function updateUI() {
         }
     }
 
-    // Event listeners
+    // Global Listeners
     currentUserSelect.addEventListener('change', (e) => {
         state.currentUserId = parseInt(e.target.value);
         state.currentUserName = e.target.options[e.target.selectedIndex].text;
@@ -319,19 +285,19 @@ function updateUI() {
     requesterViewBtn.addEventListener('click', () => { state.currentView = 'requester'; updateUI(); });
     createTaskForm.addEventListener('submit', handleCreateTask);
     modalForm.addEventListener('submit', handleModalSubmit);
-    
-    closeModalBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
+    closeModalBtn.addEventListener('click', () => { modal.style.display = 'none'; });
 
     window.addEventListener('click', (event) => {
         if (event.target == modal) modal.style.display = 'none';
-        if (event.target == deleteModal) deleteModal.classList.add('hidden');
+        if (event.target == deleteModal) deleteModal.style.display = 'none';
     });
 
     document.querySelector('main').addEventListener('click', (e) => {
         const item = e.target.closest('.task-item');
-        if (item) openTaskDetailsModal(item.dataset.taskId);
+        // Prevent opening details if clicking the delete button
+        if (item && !e.target.classList.contains('delete-btn-inline')) {
+            openTaskDetailsModal(item.dataset.taskId);
+        }
     });
 
     modalBody.addEventListener('click', (e) => {
@@ -343,7 +309,7 @@ function updateUI() {
         if (btn.classList.contains('comment-btn')) openActionModal(taskId, 'comment');
     });
 
-    // Initialize
+    // Init
     state.currentUserId = parseInt(currentUserSelect.value);
     state.currentUserName = currentUserSelect.options[currentUserSelect.selectedIndex].text;
     refreshData();
