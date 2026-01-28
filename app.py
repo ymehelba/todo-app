@@ -87,7 +87,7 @@ def create_task():
         "createdAt": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'), 
         "description": data.get("description", ""),
         "assigned_to_user_id": data.get("assigned_to_user_id", 1),
-        "history": [{"date": datetime.now(timezone.utc).isoformat(), "msg": "Created"}]
+        "history": []
     }
 
     add_history_entry(new_task, f"Task created.", None, data['creator_name'])
@@ -133,17 +133,6 @@ def add_comment(task_id):
         add_history_entry(task, f"Comment added: '{comment}'", user_id=user_id)
     else:
         return jsonify({"error": "Missing user_id or user_name for comment"}), 400
-    return jsonify(task)
-
-@app.route("/api/tasks/<string:task_id>/set-date", methods=["PUT"])
-def set_assignee_date(task_id):
-    task = get_task_by_id(task_id)
-    if not task: return jsonify({"error": "Task not found"}), 404
-    data = request.get_json()
-    if not data or not all(k in data for k in ['assignee_date', 'changed_by_user_id']): return jsonify({"error": "Missing required fields"}), 400
-    assignee_date = data['assignee_date']
-    task['expected_date_assignee'] = assignee_date
-    add_history_entry(task, f"Assignee updated their expected completion date to {assignee_date}.", data['changed_by_user_id'])
     return jsonify(task)
 
 @app.route("/api/tasks/<string:task_id>/assign", methods=["PUT"])
