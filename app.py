@@ -15,12 +15,11 @@ USERS = [
 ]
 
 TASKS = [
-    {
+{
         "id": "1",
         "title": "Complete project documentation",
         "completed": False, 
         "createdAt": "2025-01-10T09:00:00Z",
-        "status": "Open", 
         "description": "Finalize PRD and technical specs.",
         "assigned_to_user_id": 1,
         "history": []
@@ -30,7 +29,6 @@ TASKS = [
         "title": "Review pull requests",
         "completed": True, 
         "createdAt": "2025-01-09T14:30:00Z",
-        "status": "Open", 
         "description": "Review code quality.",
         "assigned_to_user_id": 1,
         "history": []
@@ -85,15 +83,11 @@ def create_task():
     new_task = {
         "id": uuid.uuid4().hex,
         "title": data["title"],
-        "completed": False,
-        "createdAt": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
-        "status": "Open",
+        "completed": False, # Always starts as false
+        "createdAt": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'), 
         "description": data.get("description", ""),
-        "assigned_to_user_id": data["assigned_to_user_id"],
-        "created_by": data['creator_name'],
-        "expected_date_requester": data["requester_date"],
-        "expected_date_assignee": None,
-        "history": []
+        "assigned_to_user_id": data.get("assigned_to_user_id", 1),
+        "history": [{"date": datetime.now(timezone.utc).isoformat(), "msg": "Created"}]
     }
 
     add_history_entry(new_task, f"Task created.", None, data['creator_name'])
@@ -113,6 +107,15 @@ def update_task_status(task_id):
     task["status"] = new_status
     
     add_history_entry(task, f"Status changed to {new_status}.", data.get('changed_by_user_id'))
+    return jsonify(task)
+
+@app.route("/api/tasks/<string:task_id>/toggle", methods=["PUT"])
+def toggle_task(task_id):
+    task = next((t for t in TASKS if t["id"] == task_id), None)
+    if not task: return jsonify({"error": "Not found"}), 404
+    
+    # Feature 3: Toggle status
+    task["completed"] = not task["completed"]
     return jsonify(task)
 
 @app.route("/api/tasks/<string:task_id>/comment", methods=["POST"])
@@ -165,6 +168,17 @@ def get_tasks_for_user(user_id):
 def get_task(task_id):
     task = get_task_by_id(task_id)
     return jsonify(task) if task else (jsonify({"error": "Task not found"}), 404)
+
+@app.route("/api/tasks/<string:task_id>", methods=["DELETE"])
+def delete_task(task_id):
+    global TASKS
+    task = get_task_by_id(task_id)
+    if not task:
+        return jsonify({"error": "Task not found"}), 404
+    
+    # Remove the task from the list
+    TASKS = [t for t in TASKS if t["id"] != task_id]
+    return jsonify({"message": "Task deleted successfully"}), 200
 
 # (Other PUT/POST routes for assignment and comments can follow here)
 
