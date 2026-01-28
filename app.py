@@ -109,15 +109,6 @@ def update_task_status(task_id):
     add_history_entry(task, f"Status changed to {new_status}.", data.get('changed_by_user_id'))
     return jsonify(task)
 
-@app.route("/api/tasks/<string:task_id>/toggle", methods=["PUT"])
-def toggle_task(task_id):
-    task = next((t for t in TASKS if t["id"] == task_id), None)
-    if not task: return jsonify({"error": "Not found"}), 404
-    
-    # Feature 3: Toggle status
-    task["completed"] = not task["completed"]
-    return jsonify(task)
-
 @app.route("/api/tasks/<string:task_id>/comment", methods=["POST"])
 def add_comment(task_id):
     task = get_task_by_id(task_id)
